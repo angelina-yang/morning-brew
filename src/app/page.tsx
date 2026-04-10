@@ -5,7 +5,7 @@ import { useApiKeys } from "@/hooks/use-api-keys";
 import { useUser } from "@/hooks/use-user";
 import { useTheme } from "@/hooks/use-theme";
 import { useScouts } from "@/hooks/use-scouts";
-import { useDigest } from "@/hooks/use-digest";
+import { useDigest, isDigestFresh } from "@/hooks/use-digest";
 import { useDraftInstructions } from "@/hooks/use-draft-instructions";
 import { Header } from "@/components/header";
 import { WelcomeModal } from "@/components/welcome-modal";
@@ -25,7 +25,7 @@ export default function Home() {
   const { isDark, toggleTheme, loaded: themeLoaded } = useTheme();
   const { instructions, setInstructions } = useDraftInstructions();
 
-  const { scouts, loading: scoutsLoading, fetchScouts, createScout, togglePause, deleteScout } = useScouts(keys);
+  const { scouts, loading: scoutsLoading, fetchScouts, createScout, togglePause, deleteScout, pauseAll, resumeAll } = useScouts(keys);
   const { digest, loading: digestLoading, generateDigest, toggleSelect, deselectAll, selectedItems } = useDigest(keys);
 
   const [showSettings, setShowSettings] = useState(false);
@@ -61,7 +61,10 @@ export default function Home() {
             createScout={createScout}
             togglePause={togglePause}
             deleteScout={deleteScout}
+            pauseAll={pauseAll}
+            resumeAll={resumeAll}
             generateDigest={generateDigest}
+            cachedDigest={digest}
           />
         )}
 
@@ -133,7 +136,10 @@ function ScoutManagerWithAutoFetch({
   createScout,
   togglePause,
   deleteScout,
+  pauseAll,
+  resumeAll,
   generateDigest,
+  cachedDigest,
 }: {
   keys: { yutoriApiKey: string; claudeApiKey: string };
   scouts: import("@/types").YutoriScout[];
@@ -142,7 +148,10 @@ function ScoutManagerWithAutoFetch({
   createScout: (query: string) => Promise<void>;
   togglePause: (id: string, status: string) => Promise<void>;
   deleteScout: (id: string) => Promise<void>;
+  pauseAll: () => Promise<void>;
+  resumeAll: () => Promise<void>;
   generateDigest: (scouts: import("@/types").YutoriScout[]) => Promise<void>;
+  cachedDigest: import("@/types").Digest | null;
 }) {
   const [initialized, setInitialized] = useState(false);
 
@@ -153,10 +162,12 @@ function ScoutManagerWithAutoFetch({
     }
   }, [initialized, keys.yutoriApiKey, fetchScouts]);
 
-  // Auto-generate digest after scouts are loaded
+  // Auto-generate digest after scouts are loaded — but only if cache is stale
   useEffect(() => {
     if (initialized && scouts.length > 0 && keys.claudeApiKey) {
-      generateDigest(scouts);
+      if (!isDigestFresh(cachedDigest)) {
+        generateDigest(scouts);
+      }
     }
     // Only run when scouts change after initialization
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,6 +179,8 @@ function ScoutManagerWithAutoFetch({
       onCreateScout={createScout}
       onTogglePause={togglePause}
       onDeleteScout={deleteScout}
+      onPauseAll={pauseAll}
+      onResumeAll={resumeAll}
       disabled={scoutsLoading}
     />
   );

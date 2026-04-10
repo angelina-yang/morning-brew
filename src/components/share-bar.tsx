@@ -39,6 +39,18 @@ export function ShareBar({ selectedItems, onDeselectAll }: ShareBarProps) {
     }
   };
 
+  const handleListen = () => {
+    const urls = selectedItems
+      .map((i) => i.sourceUrl)
+      .filter((u): u is string => Boolean(u))
+      .map((u) => encodeURIComponent(u))
+      .join(",");
+    if (!urls) return;
+    window.open(`https://tllisten.twosetai.com?urls=${urls}`, "_blank", "noopener,noreferrer");
+  };
+
+  const hasUrls = selectedItems.some((i) => i.sourceUrl);
+
   return (
     <div
       className="sticky bottom-0 z-40 px-4 py-3 flex items-center justify-between"
@@ -60,6 +72,22 @@ export function ShareBar({ selectedItems, onDeselectAll }: ShareBarProps) {
           }}
         >
           Deselect
+        </button>
+        <button
+          onClick={handleListen}
+          disabled={!hasUrls}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-40"
+          style={{
+            color: "var(--text-secondary)",
+            border: "1px solid var(--border-primary)",
+          }}
+          title="Open selected articles in TL;Listen for audio playback"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+          </svg>
+          Listen on TL;Listen
         </button>
         <button
           onClick={handleCopy}

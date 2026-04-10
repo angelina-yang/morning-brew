@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { YutoriScout } from "@/types";
 import { ScoutForm } from "./scout-form";
 
@@ -8,6 +9,8 @@ interface ScoutManagerProps {
   onCreateScout: (query: string) => Promise<void>;
   onTogglePause: (scoutId: string, currentStatus: string) => Promise<void>;
   onDeleteScout: (scoutId: string) => Promise<void>;
+  onPauseAll: () => Promise<void>;
+  onResumeAll: () => Promise<void>;
   disabled: boolean;
 }
 
@@ -16,8 +19,34 @@ export function ScoutManager({
   onCreateScout,
   onTogglePause,
   onDeleteScout,
+  onPauseAll,
+  onResumeAll,
   disabled,
 }: ScoutManagerProps) {
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("");
+
+  const allPaused = scouts.length > 0 && scouts.every((s) => s.status === "paused");
+  const hasActive = scouts.some((s) => s.status === "active");
+
+  const handlePauseAll = async () => {
+    setBulkLoading(true);
+    setBulkMessage("");
+    await onPauseAll();
+    setBulkLoading(false);
+    setBulkMessage("All topics paused. They won't run until you resume.");
+    setTimeout(() => setBulkMessage(""), 4000);
+  };
+
+  const handleResumeAll = async () => {
+    setBulkLoading(true);
+    setBulkMessage("");
+    await onResumeAll();
+    setBulkLoading(false);
+    setBulkMessage("All topics resumed. Your next brew will be ready tomorrow.");
+    setTimeout(() => setBulkMessage(""), 4000);
+  };
+
   return (
     <div
       className="rounded-xl p-4"
@@ -26,14 +55,37 @@ export function ScoutManager({
         border: "1px solid var(--border-primary)",
       }}
     >
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-          What would you like to read with your morning coffee?
-        </h3>
-        <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          Add topics or websites you want to follow. Tomorrow morning, your brew will be ready.
-        </p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            What would you like to read with your morning coffee?
+          </h3>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+            Add topics or websites you want to follow. Tomorrow morning, your brew will be ready.
+          </p>
+        </div>
+        {scouts.length > 1 && (
+          <button
+            onClick={allPaused ? handleResumeAll : handlePauseAll}
+            disabled={bulkLoading || (!allPaused && !hasActive)}
+            className="text-xs px-2.5 py-1 rounded-md transition-colors disabled:opacity-40 shrink-0"
+            style={{
+              background: "var(--bg-input)",
+              color: "var(--text-secondary)",
+              border: "1px solid var(--border-primary)",
+            }}
+            title={allPaused ? "Resume all topics" : "Skip a day to save API costs"}
+          >
+            {bulkLoading ? "..." : allPaused ? "Resume all" : "Pause all"}
+          </button>
+        )}
       </div>
+
+      {bulkMessage && (
+        <p className="text-xs mb-3 animate-fade-in" style={{ color: "var(--accent)" }}>
+          ✓ {bulkMessage}
+        </p>
+      )}
 
       {/* Scout list */}
       {scouts.length > 0 && (
@@ -97,6 +149,11 @@ export function ScoutManager({
 
       {/* Add new scout */}
       <ScoutForm onSubmit={onCreateScout} disabled={disabled} />
+
+      {/* Yutori cost note */}
+      <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>
+        Each topic runs once a day on Yutori (~$0.35 per run, billed to your Yutori account).
+      </p>
     </div>
   );
 }

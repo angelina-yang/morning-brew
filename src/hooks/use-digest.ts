@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import type { DigestItem, Digest, ApiKeys, YutoriScout } from "@/types";
 
 const STORAGE_KEY = "morning-brew-digest";
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 function loadCachedDigest(): Digest | null {
   try {
@@ -17,6 +18,12 @@ function saveCachedDigest(digest: Digest) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(digest));
   } catch {}
+}
+
+export function isDigestFresh(digest: Digest | null): boolean {
+  if (!digest?.generatedAt) return false;
+  const age = Date.now() - new Date(digest.generatedAt).getTime();
+  return age < CACHE_TTL_MS;
 }
 
 export function useDigest(keys: ApiKeys) {

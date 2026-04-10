@@ -81,6 +81,50 @@ export function useScouts(keys: ApiKeys) {
     }
   }, [headers]);
 
+  const pauseAll = useCallback(async () => {
+    setError("");
+    const activeScouts = scouts.filter((s) => s.status === "active");
+    if (activeScouts.length === 0) return;
+    try {
+      await Promise.all(
+        activeScouts.map((s) =>
+          fetch(`/api/scouts/${s.id}`, {
+            method: "PATCH",
+            headers: headers(),
+            body: JSON.stringify({ status: "paused" }),
+          })
+        )
+      );
+      setScouts((prev) =>
+        prev.map((s) => (s.status === "active" ? { ...s, status: "paused" as const } : s))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to pause all scouts");
+    }
+  }, [scouts, headers]);
+
+  const resumeAll = useCallback(async () => {
+    setError("");
+    const pausedScouts = scouts.filter((s) => s.status === "paused");
+    if (pausedScouts.length === 0) return;
+    try {
+      await Promise.all(
+        pausedScouts.map((s) =>
+          fetch(`/api/scouts/${s.id}`, {
+            method: "PATCH",
+            headers: headers(),
+            body: JSON.stringify({ status: "active" }),
+          })
+        )
+      );
+      setScouts((prev) =>
+        prev.map((s) => (s.status === "paused" ? { ...s, status: "active" as const } : s))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resume all scouts");
+    }
+  }, [scouts, headers]);
+
   return {
     scouts,
     loading,
@@ -89,5 +133,7 @@ export function useScouts(keys: ApiKeys) {
     createScout,
     togglePause,
     deleteScout,
+    pauseAll,
+    resumeAll,
   };
 }
