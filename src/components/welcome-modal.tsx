@@ -11,10 +11,11 @@ export function WelcomeModal({ isOpen, onComplete }: WelcomeModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [newsletter, setNewsletter] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   if (!isOpen) return null;
 
-  const isValid = name.trim().length > 0 && email.includes("@");
+  const isValid = name.trim().length > 0 && email.includes("@") && agreedToTerms;
 
   const handleSubmit = () => {
     if (!isValid) return;
@@ -103,7 +104,7 @@ export function WelcomeModal({ isOpen, onComplete }: WelcomeModalProps) {
         </div>
 
         {/* Newsletter opt-in */}
-        <label className="flex items-start gap-2 mb-4 cursor-pointer">
+        <label className="flex items-start gap-2 mb-3 cursor-pointer">
           <input
             type="checkbox"
             checked={newsletter}
@@ -123,6 +124,30 @@ export function WelcomeModal({ isOpen, onComplete }: WelcomeModalProps) {
               TwoSetAI newsletter
             </a>
             {" "}— new free AI tools, founder insights, and early access to what I&apos;m building.
+          </span>
+        </label>
+
+        {/* Terms agreement (required) */}
+        <label className="flex items-start gap-2 mb-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={(e) => setAgreedToTerms(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            I agree to the{" "}
+            <a
+              href="https://www.twosetai.com/lab/terms/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="transition-colors hover:underline"
+              style={{ color: "var(--accent)" }}
+            >
+              TwoSetAI Lab Terms of Use
+            </a>
+            . This is a free, BYOK tool — I bring my own API keys and pay my own usage costs.
           </span>
         </label>
 
