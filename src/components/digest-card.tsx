@@ -109,7 +109,7 @@ export function DigestCard({ item, onToggleSelect, onDraft }: DigestCardProps) {
                 <button
                   onClick={() => {
                     window.open(
-                      `https://tllisten.twosetai.com?urls=${encodeURIComponent(item.sourceUrl)}`,
+                      `https://tllisten.twosetai.com?urls=${encodeURIComponent(item.sourceUrl)}&source=morning-brew`,
                       "_blank",
                       "noopener,noreferrer"
                     );

@@ -46,7 +46,7 @@ export function ShareBar({ selectedItems, onDeselectAll }: ShareBarProps) {
       .map((u) => encodeURIComponent(u))
       .join(",");
     if (!urls) return;
-    window.open(`https://tllisten.twosetai.com?urls=${urls}`, "_blank", "noopener,noreferrer");
+    window.open(`https://tllisten.twosetai.com?urls=${urls}&source=morning-brew`, "_blank", "noopener,noreferrer");
   };
 
   const hasUrls = selectedItems.some((i) => i.sourceUrl);
