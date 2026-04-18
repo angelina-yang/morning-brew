@@ -119,6 +119,7 @@ export default function Home() {
         onClose={() => setDraftModal({ isOpen: false, platform: "tweet", item: null })}
         summary={draftModal.item?.summary || ""}
         title={draftModal.item?.title || ""}
+        sourceUrl={draftModal.item?.sourceUrl}
         claudeApiKey={keys.claudeApiKey}
         instructions={instructions[draftModal.platform]}
         onInstructionsChange={(val) => setInstructions({ [draftModal.platform]: val })}

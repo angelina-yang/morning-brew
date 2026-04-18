@@ -10,6 +10,7 @@ interface DraftModalProps {
   onClose: () => void;
   summary: string;
   title: string;
+  sourceUrl?: string;
   claudeApiKey?: string;
   instructions: string;
   onInstructionsChange: (instructions: string) => void;
@@ -21,6 +22,7 @@ export function DraftModal({
   onClose,
   summary,
   title,
+  sourceUrl,
   claudeApiKey,
   instructions,
   onInstructionsChange,
@@ -29,6 +31,7 @@ export function DraftModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [localInstructions, setLocalInstructions] = useState(instructions);
 
@@ -83,11 +86,9 @@ export function DraftModal({
     setLoading(false);
   };
 
-  const handleCopy = async () => {
+  const copyDraftToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(draft);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
       const textarea = document.createElement("textarea");
       textarea.value = draft;
@@ -95,9 +96,45 @@ export function DraftModal({
       textarea.select();
       document.execCommand("copy");
       document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleCopy = async () => {
+    await copyDraftToClipboard();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePost = async () => {
+    if (!draft) return;
+    setPosting(true);
+
+    // Always copy text first — on LinkedIn the user will paste it; on X it's
+    // prefilled but having it on clipboard is a nice fallback if the window
+    // re-opens or the user edits before posting.
+    await copyDraftToClipboard();
+
+    let shareUrl: string;
+    if (platform === "tweet") {
+      // X/Twitter supports prefilled text + URL via intent endpoint.
+      const params = new URLSearchParams({ text: draft });
+      if (sourceUrl) params.set("url", sourceUrl);
+      shareUrl = `https://twitter.com/intent/tweet?${params.toString()}`;
+    } else {
+      // LinkedIn only accepts URL — it auto-fetches og:image/title/description.
+      // Text must be pasted by the user (LinkedIn dropped &text=/&summary= years
+      // ago to reduce spam). Clipboard write above makes this a one-paste flow.
+      const params = new URLSearchParams();
+      if (sourceUrl) params.set("url", sourceUrl);
+      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?${params.toString()}`;
+    }
+
+    window.open(shareUrl, "_blank", "noopener,noreferrer");
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+      setPosting(false);
+    }, 2500);
   };
 
   const handleSaveInstructions = () => {
@@ -255,30 +292,80 @@ export function DraftModal({
             </svg>
             Regenerate
           </button>
-          <button
-            onClick={handleCopy}
-            disabled={!draft || loading}
-            className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
-            style={{ background: "var(--accent)" }}
-          >
-            {copied ? (
-              <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-                Copied!
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                Copy
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopy}
+              disabled={!draft || loading}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
+              style={{
+                background: "var(--accent-surface)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+              title="Copy draft to clipboard"
+            >
+              {copied && !posting ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+            <button
+              onClick={handlePost}
+              disabled={!draft || loading}
+              className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-40"
+              style={{ background: "var(--accent)" }}
+              title={
+                platform === "tweet"
+                  ? "Copy text and open X composer (text will be prefilled)"
+                  : "Copy text and open LinkedIn — paste (Cmd+V) into the post box"
+              }
+            >
+              {posting && copied ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  Opened!
+                </>
+              ) : platform === "tweet" ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  Post on X
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                  </svg>
+                  Post to LinkedIn
+                </>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Helper hint for LinkedIn — text must be pasted manually */}
+        {platform === "linkedin" && draft && (
+          <p className="text-xs mt-2 text-right" style={{ color: "var(--text-faint)" }}>
+            LinkedIn doesn&rsquo;t accept prefilled text. We copy your draft — paste with{" "}
+            <kbd className="px-1 rounded" style={{ background: "var(--bg-input)", border: "1px solid var(--border-primary)" }}>⌘V</kbd>{" "}
+            in the composer.
+          </p>
+        )}
       </div>
     </div>
   );
