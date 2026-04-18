@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import type { DigestItem, Digest, ApiKeys, YutoriScout } from "@/types";
+import { dedupeByUrl } from "@/lib/url-utils";
 
 const STORAGE_KEY = "morning-brew-digest";
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -93,7 +94,7 @@ export function useDigest(keys: ApiKeys) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to generate digest");
 
-        const items: DigestItem[] = (data.items || []).map(
+        const rawItems: DigestItem[] = (data.items || []).map(
           (item: Record<string, string>, i: number) => ({
             id: `digest-${Date.now()}-${i}`,
             title: item.title || "Untitled",
@@ -105,6 +106,10 @@ export function useDigest(keys: ApiKeys) {
             selected: false,
           })
         );
+
+        // Dedup items that appear across multiple scouts (same normalized URL).
+        // Keeps the first occurrence — preserves Claude's chosen ordering.
+        const items = dedupeByUrl(rawItems);
 
         const newDigest: Digest = {
           items,

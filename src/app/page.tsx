@@ -11,22 +11,25 @@ import { Header } from "@/components/header";
 import { WelcomeModal } from "@/components/welcome-modal";
 import { SettingsModal } from "@/components/settings-modal";
 import { EmptyState } from "@/components/empty-state";
+import { GreetingBanner } from "@/components/greeting-banner";
+import { AddToCalendarButton } from "@/components/add-to-calendar";
 import { ScoutManager } from "@/components/scout-manager";
 import { DigestFeed } from "@/components/digest-feed";
 import { DigestSkeleton } from "@/components/digest-skeleton";
 import { ShareBar } from "@/components/share-bar";
 import { DraftModal } from "@/components/draft-modal";
 import { Footer } from "@/components/footer";
+import { pickRandom, QUIET_DAY_MESSAGES, CLAUDE_ERROR_MESSAGES } from "@/lib/copy-bank";
 import type { DigestItem, Platform } from "@/types";
 
 export default function Home() {
   const { keys, hasKeys, loaded, saveKeys } = useApiKeys();
-  const { isRegistered, loaded: userLoaded, register } = useUser();
+  const { user, isRegistered, loaded: userLoaded, register } = useUser();
   const { isDark, toggleTheme, loaded: themeLoaded } = useTheme();
   const { instructions, setInstructions } = useDraftInstructions();
 
   const { scouts, loading: scoutsLoading, fetchScouts, createScout, togglePause, deleteScout, pauseAll, resumeAll } = useScouts(keys);
-  const { digest, loading: digestLoading, generateDigest, toggleSelect, deselectAll, selectedItems } = useDigest(keys);
+  const { digest, loading: digestLoading, error: digestError, generateDigest, toggleSelect, deselectAll, selectedItems } = useDigest(keys);
 
   const [showSettings, setShowSettings] = useState(false);
   const [draftModal, setDraftModal] = useState<{
@@ -51,6 +54,9 @@ export default function Home() {
       />
 
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 space-y-6">
+        {/* Greeting (only once user registered + has keys) */}
+        {hasKeys && user?.name && <GreetingBanner name={user.name} />}
+
         {/* Scout manager (always visible when keys are set) */}
         {hasKeys && (
           <ScoutManagerWithAutoFetch
@@ -75,17 +81,33 @@ export default function Home() {
           <EmptyState hasKeys={true} onOpenSettings={() => setShowSettings(true)} />
         ) : digestLoading ? (
           <DigestSkeleton />
-        ) : digest && digest.items.length > 0 ? (
-          <DigestFeed
-            items={digest.items}
-            generatedAt={digest.generatedAt}
-            onToggleSelect={toggleSelect}
-            onDraft={(item, platform) => setDraftModal({ isOpen: true, platform, item })}
-          />
-        ) : digest && digest.items.length === 0 ? (
-          <div className="text-center py-12">
+        ) : digestError ? (
+          <div className="text-center py-12 px-4">
+            <p className="text-3xl mb-3">☕</p>
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Your brew is still steeping. Check back later or add more topics.
+              {pickRandom(CLAUDE_ERROR_MESSAGES)}
+            </p>
+            <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>
+              {digestError}
+            </p>
+          </div>
+        ) : digest && digest.items.length > 0 ? (
+          <>
+            <DigestFeed
+              items={digest.items}
+              generatedAt={digest.generatedAt}
+              onToggleSelect={toggleSelect}
+              onDraft={(item, platform) => setDraftModal({ isOpen: true, platform, item })}
+            />
+            <div className="flex justify-center pt-2">
+              <AddToCalendarButton />
+            </div>
+          </>
+        ) : digest && digest.items.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <p className="text-3xl mb-3">☕</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              {pickRandom(QUIET_DAY_MESSAGES)}
             </p>
           </div>
         ) : null}
