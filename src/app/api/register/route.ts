@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Input too long" }, { status: 400 });
     }
 
-    // Log to Google Sheet (non-blocking)
+    // Log to signup webhook (non-blocking)
     const webhookUrl = process.env.GOOGLE_SHEET_WEBHOOK;
     if (webhookUrl) {
       fetch(webhookUrl, {
