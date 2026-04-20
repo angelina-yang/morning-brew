@@ -20,7 +20,9 @@ export interface YutoriScout {
   output_interval: number;
   user_timezone: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  completed_at?: string | null;
+  rejection_reason?: string | null;
 }
 
 export interface YutoriScoutCreate {

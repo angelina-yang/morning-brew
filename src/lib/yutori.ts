@@ -110,15 +110,41 @@ export async function getScout(
   return yutoriFetch<YutoriScout>(`/tasks/${scoutId}`, apiKey);
 }
 
+/**
+ * Update scout fields (query, output_interval). Yutori's PATCH does NOT
+ * accept `status` — pausing/resuming is a separate dedicated endpoint,
+ * see pauseScout() / resumeScout() below.
+ */
 export async function updateScout(
   apiKey: string,
   scoutId: string,
-  updates: Partial<Pick<YutoriScout, "status" | "query" | "output_interval">>
+  updates: Partial<Pick<YutoriScout, "query" | "output_interval">>
 ): Promise<YutoriScout> {
   return yutoriFetch<YutoriScout>(`/tasks/${scoutId}`, apiKey, {
     method: "PATCH",
     body: JSON.stringify(updates),
   });
+}
+
+/**
+ * Pause a scout. Uses the dedicated POST /tasks/{id}/pause endpoint.
+ * IMPORTANT: Do NOT try to pause via PATCH with status: "paused" —
+ * Yutori silently rejects that with 400 "At least one field must be
+ * provided for update." Historical bug: the original code did exactly
+ * this, so "paused" scouts kept running until the balance ran out.
+ * Returns 204 (no body) on success.
+ */
+export async function pauseScout(apiKey: string, scoutId: string): Promise<void> {
+  await yutoriFetch<void>(`/tasks/${scoutId}/pause`, apiKey, { method: "POST" });
+}
+
+/**
+ * Resume a paused or completed scout. Uses POST /tasks/{id}/resume.
+ * Can revive scouts marked "done" (e.g., deactivated due to insufficient
+ * balance) as long as the current balance is sufficient. Returns 204.
+ */
+export async function resumeScout(apiKey: string, scoutId: string): Promise<void> {
+  await yutoriFetch<void>(`/tasks/${scoutId}/resume`, apiKey, { method: "POST" });
 }
 
 export async function deleteScout(

@@ -13,6 +13,7 @@ import { SettingsModal } from "@/components/settings-modal";
 import { EmptyState } from "@/components/empty-state";
 import { GreetingBanner } from "@/components/greeting-banner";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
+import { DeactivatedScoutsBanner } from "@/components/deactivated-scouts-banner";
 import { ScoutManager } from "@/components/scout-manager";
 import { DigestFeed } from "@/components/digest-feed";
 import { DigestSkeleton } from "@/components/digest-skeleton";
@@ -56,6 +57,15 @@ export default function Home() {
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 space-y-6">
         {/* Greeting (only once user registered + has keys) */}
         {hasKeys && user?.name && <GreetingBanner name={user.name} />}
+
+        {/* Deactivated (done) scouts — surface Yutori rejections so users know why their brew is empty */}
+        {hasKeys && scouts.length > 0 && (
+          <DeactivatedScoutsBanner
+            scouts={scouts}
+            onRecreate={createScout}
+            onDelete={deleteScout}
+          />
+        )}
 
         {/* Scout error banner — prioritize actionable messaging for known codes */}
         {hasKeys && scoutsError && (

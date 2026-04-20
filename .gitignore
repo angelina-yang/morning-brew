@@ -45,6 +45,8 @@ yarn-error.log*
 
 # Internal docs (personal reference only, not for public repo)
 PROJECT.md
+COSTS.md
+FEATURE_*.md
 
 # Claude Code session files
 .claude/
