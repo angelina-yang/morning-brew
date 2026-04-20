@@ -23,6 +23,8 @@ export interface YutoriScout {
   updated_at?: string;
   completed_at?: string | null;
   rejection_reason?: string | null;
+  next_output_timestamp?: string | null;
+  last_update_timestamp?: string | null;
 }
 
 export interface YutoriScoutCreate {

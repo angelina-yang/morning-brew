@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/empty-state";
 import { GreetingBanner } from "@/components/greeting-banner";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
 import { DeactivatedScoutsBanner } from "@/components/deactivated-scouts-banner";
+import { BrewNowButton } from "@/components/brew-now-button";
 import { ScoutManager } from "@/components/scout-manager";
 import { DigestFeed } from "@/components/digest-feed";
 import { DigestSkeleton } from "@/components/digest-skeleton";
@@ -143,9 +144,10 @@ export default function Home() {
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               {pickRandom(CLAUDE_ERROR_MESSAGES)}
             </p>
-            <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>
+            <p className="text-xs mt-2 mb-4" style={{ color: "var(--text-faint)" }}>
               {digestError}
             </p>
+            <BrewNowButton onClick={() => generateDigest(scouts)} label="Try again" />
           </div>
         ) : digest && digest.items.length > 0 ? (
           <>
@@ -162,11 +164,21 @@ export default function Home() {
         ) : digest && digest.items.length === 0 ? (
           <div className="text-center py-12 px-4">
             <p className="text-3xl mb-3">☕</p>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
               {pickRandom(QUIET_DAY_MESSAGES)}
             </p>
+            <BrewNowButton onClick={() => generateDigest(scouts)} />
           </div>
-        ) : null}
+        ) : (
+          /* No digest yet — scouts loaded but auto-fetch hasn't produced one */
+          <div className="text-center py-12 px-4">
+            <p className="text-3xl mb-3">☕</p>
+            <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+              Ready when you are.
+            </p>
+            <BrewNowButton onClick={() => generateDigest(scouts)} />
+          </div>
+        )}
       </main>
 
       {/* Share bar */}

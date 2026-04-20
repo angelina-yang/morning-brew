@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { YutoriScout } from "@/types";
 import { ScoutForm } from "./scout-form";
+import { formatRelativeFuture, formatRelativePast } from "@/lib/time-format";
 
 interface ScoutManagerProps {
   scouts: YutoriScout[];
@@ -90,7 +91,19 @@ export function ScoutManager({
       {/* Scout list */}
       {scouts.length > 0 && (
         <div className="space-y-2 mb-3">
-          {scouts.map((scout) => (
+          {scouts.map((scout) => {
+            const nextRun = scout.status === "active" ? formatRelativeFuture(scout.next_output_timestamp) : null;
+            const lastRun = formatRelativePast(scout.last_update_timestamp);
+            const scheduleBits: string[] = [];
+            if (scout.status === "paused") scheduleBits.push("Paused");
+            else if (scout.status === "done") scheduleBits.push("Deactivated");
+            else scheduleBits.push("Active");
+            scheduleBits.push("Daily");
+            if (nextRun) scheduleBits.push(`next ${nextRun}`);
+            else if (scout.status === "active" && !lastRun) scheduleBits.push("waiting for first run");
+            if (lastRun) scheduleBits.push(`last ran ${lastRun}`);
+
+            return (
             <div
               key={scout.id}
               className="flex items-center justify-between px-3 py-2 rounded-lg"
@@ -106,7 +119,7 @@ export function ScoutManager({
                   {scout.query}
                 </p>
                 <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-                  {scout.status === "paused" ? "Paused" : "Active"} &middot; Daily
+                  {scheduleBits.join(" · ")}
                 </p>
               </div>
 
@@ -143,7 +156,8 @@ export function ScoutManager({
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
