@@ -7,6 +7,12 @@ export function useScouts(keys: ApiKeys) {
   const [scouts, setScouts] = useState<YutoriScout[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
+
+  const clearError = useCallback(() => {
+    setError("");
+    setErrorCode(undefined);
+  }, []);
 
   const headers = useCallback((): Record<string, string> => ({
     "Content-Type": "application/json",
@@ -30,6 +36,7 @@ export function useScouts(keys: ApiKeys) {
 
   const createScout = useCallback(async (query: string) => {
     setError("");
+    setErrorCode(undefined);
     try {
       const res = await fetch("/api/scouts", {
         method: "POST",
@@ -37,7 +44,10 @@ export function useScouts(keys: ApiKeys) {
         body: JSON.stringify({ query }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create scout");
+      if (!res.ok) {
+        setErrorCode(typeof data.errorCode === "string" ? data.errorCode : undefined);
+        throw new Error(data.error || "Failed to create scout");
+      }
       setScouts((prev) => [...prev, data.scout]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create scout");
@@ -129,6 +139,8 @@ export function useScouts(keys: ApiKeys) {
     scouts,
     loading,
     error,
+    errorCode,
+    clearError,
     fetchScouts,
     createScout,
     togglePause,

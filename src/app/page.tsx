@@ -28,7 +28,7 @@ export default function Home() {
   const { isDark, toggleTheme, loaded: themeLoaded } = useTheme();
   const { instructions, setInstructions } = useDraftInstructions();
 
-  const { scouts, loading: scoutsLoading, fetchScouts, createScout, togglePause, deleteScout, pauseAll, resumeAll } = useScouts(keys);
+  const { scouts, loading: scoutsLoading, error: scoutsError, errorCode: scoutsErrorCode, clearError: clearScoutsError, fetchScouts, createScout, togglePause, deleteScout, pauseAll, resumeAll } = useScouts(keys);
   const { digest, loading: digestLoading, error: digestError, generateDigest, toggleSelect, deselectAll, selectedItems } = useDigest(keys);
 
   const [showSettings, setShowSettings] = useState(false);
@@ -56,6 +56,52 @@ export default function Home() {
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 space-y-6">
         {/* Greeting (only once user registered + has keys) */}
         {hasKeys && user?.name && <GreetingBanner name={user.name} />}
+
+        {/* Scout error banner — prioritize actionable messaging for known codes */}
+        {hasKeys && scoutsError && (
+          <div
+            className="rounded-lg p-3 flex items-start gap-3"
+            style={{
+              background: "var(--accent-surface)",
+              border: "1px solid var(--accent)",
+            }}
+            role="alert"
+          >
+            <span className="text-lg leading-none mt-0.5">☕</span>
+            <div className="flex-1 min-w-0 text-xs" style={{ color: "var(--text-primary)" }}>
+              {scoutsErrorCode === "insufficient_funds" ? (
+                <>
+                  <p className="font-semibold">Your Yutori balance is too low to add another topic.</p>
+                  <p className="mt-1" style={{ color: "var(--text-muted)" }}>
+                    Each topic costs ~$0.35 per run.{" "}
+                    <a
+                      href="https://platform.yutori.com/billing"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      Add credits on Yutori →
+                    </a>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Couldn&rsquo;t add that topic.</p>
+                  <p className="mt-1" style={{ color: "var(--text-muted)" }}>{scoutsError}</p>
+                </>
+              )}
+            </div>
+            <button
+              onClick={clearScoutsError}
+              className="text-xs shrink-0 p-1"
+              style={{ color: "var(--text-muted)" }}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Scout manager (always visible when keys are set) */}
         {hasKeys && (

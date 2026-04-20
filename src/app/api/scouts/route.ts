@@ -53,6 +53,7 @@ export async function POST(req: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to create scout";
     const status = (err as { status?: number }).status || 500;
-    return NextResponse.json({ error: message }, { status });
+    const errorCode = (err as { errorCode?: string }).errorCode;
+    return NextResponse.json({ error: message, errorCode }, { status });
   }
 }

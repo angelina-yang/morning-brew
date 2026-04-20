@@ -5,11 +5,44 @@ const BASE_URL = "https://api.yutori.com/v1/scouting";
 class YutoriError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    public errorCode?: string
   ) {
     super(message);
     this.name = "YutoriError";
   }
+}
+
+/**
+ * Yutori returns errors in several shapes:
+ *   { "error": "..." }
+ *   { "message": "..." }
+ *   { "detail": "..." }                                  // string
+ *   { "detail": { "error_code": "...", "message": "..."} } // object (observed for insufficient_funds)
+ * Normalize all of them into a flat { message, errorCode? }.
+ */
+function extractErrorInfo(
+  body: unknown,
+  fallback: string
+): { message: string; errorCode?: string } {
+  if (!body || typeof body !== "object") return { message: fallback };
+  const b = body as Record<string, unknown>;
+
+  if (typeof b.error === "string") return { message: b.error };
+  if (typeof b.message === "string") return { message: b.message };
+
+  if (typeof b.detail === "string") return { message: b.detail };
+  if (b.detail && typeof b.detail === "object") {
+    const d = b.detail as Record<string, unknown>;
+    const msg =
+      (typeof d.message === "string" && d.message) ||
+      (typeof d.error === "string" && d.error) ||
+      fallback;
+    const code = typeof d.error_code === "string" ? d.error_code : undefined;
+    return { message: msg, errorCode: code };
+  }
+
+  return { message: fallback };
 }
 
 async function yutoriFetch<T>(
@@ -27,16 +60,15 @@ async function yutoriFetch<T>(
   });
 
   if (!res.ok) {
-    let message = `Yutori API error: ${res.status} ${res.statusText}`;
+    const fallback = `Yutori API error: ${res.status} ${res.statusText}`;
+    let info: { message: string; errorCode?: string } = { message: fallback };
     try {
       const body = await res.json();
-      if (body.error || body.message || body.detail) {
-        message = body.error || body.message || body.detail;
-      }
+      info = extractErrorInfo(body, fallback);
     } catch {
-      // Use default message
+      // Use fallback message
     }
-    throw new YutoriError(message, res.status);
+    throw new YutoriError(info.message, res.status, info.errorCode);
   }
 
   // DELETE returns no content
