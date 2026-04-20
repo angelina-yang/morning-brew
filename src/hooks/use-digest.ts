@@ -108,8 +108,21 @@ export function useDigest(keys: ApiKeys) {
         );
 
         // Dedup items that appear across multiple scouts (same normalized URL).
-        // Keeps the first occurrence — preserves Claude's chosen ordering.
-        const items = dedupeByUrl(rawItems);
+        const deduped = dedupeByUrl(rawItems);
+
+        // Sort newest-first by article timestamp. Items with invalid or missing
+        // timestamps go to the bottom in their original (deduped) order so we
+        // never silently drop them.
+        const items = [...deduped].sort((a, b) => {
+          const ta = Date.parse(a.timestamp || "");
+          const tb = Date.parse(b.timestamp || "");
+          const aValid = !isNaN(ta);
+          const bValid = !isNaN(tb);
+          if (aValid && bValid) return tb - ta;
+          if (aValid) return -1;
+          if (bValid) return 1;
+          return 0;
+        });
 
         const newDigest: Digest = {
           items,
