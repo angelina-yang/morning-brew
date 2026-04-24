@@ -52,8 +52,30 @@ export function Footer() {
         </a>
       </div>
 
-      {/* Right: enjoying your brew + coffee button */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right: support links + coffee button */}
+      <div className="flex items-center gap-3 shrink-0 flex-wrap">
+        <a
+          href="https://www.delphi.ai/angelina-yang"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs transition-colors hover:underline"
+          style={{ color: "var(--text-muted)" }}
+          title="Suggest a feature — ask Angelina's AI clone"
+        >
+          Request a feature
+        </a>
+        <span style={{ color: "var(--text-faint)" }}>·</span>
+        <a
+          href="https://www.delphi.ai/angelina-yang"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs transition-colors hover:underline"
+          style={{ color: "var(--text-muted)" }}
+          title="Something not working? Ask Angelina"
+        >
+          Something not working?
+        </a>
+        <span style={{ color: "var(--text-faint)" }}>·</span>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
           Enjoying your brew? ☕
         </span>
