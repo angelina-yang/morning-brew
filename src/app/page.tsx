@@ -15,6 +15,7 @@ import { GreetingBanner } from "@/components/greeting-banner";
 import { AddToCalendarButton } from "@/components/add-to-calendar";
 import { DeactivatedScoutsBanner } from "@/components/deactivated-scouts-banner";
 import { BrewNowButton } from "@/components/brew-now-button";
+import { AskAngelinaLink } from "@/components/ask-angelina-link";
 import { ScoutManager } from "@/components/scout-manager";
 import { DigestFeed } from "@/components/digest-feed";
 import { DigestSkeleton } from "@/components/digest-skeleton";
@@ -100,6 +101,13 @@ export default function Home() {
                 <>
                   <p className="font-semibold">Couldn&rsquo;t add that topic.</p>
                   <p className="mt-1" style={{ color: "var(--text-muted)" }}>{scoutsError}</p>
+                  <p className="mt-2">
+                    <AskAngelinaLink
+                      appName="Daily Brew"
+                      context="Couldn't add a new scout"
+                      error={scoutsError}
+                    />
+                  </p>
                 </>
               )}
             </div>
@@ -147,7 +155,14 @@ export default function Home() {
             <p className="text-xs mt-2 mb-4" style={{ color: "var(--text-faint)" }}>
               {digestError}
             </p>
-            <BrewNowButton onClick={() => generateDigest(scouts)} label="Try again" />
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <BrewNowButton onClick={() => generateDigest(scouts)} label="Try again" />
+              <AskAngelinaLink
+                appName="Daily Brew"
+                context="Digest generation failed"
+                error={digestError}
+              />
+            </div>
           </div>
         ) : digest && digest.items.length > 0 ? (
           <>

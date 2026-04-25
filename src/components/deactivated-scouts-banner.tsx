@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { YutoriScout } from "@/types";
+import { AskAngelinaLink } from "./ask-angelina-link";
 
 interface DeactivatedScoutsBannerProps {
   scouts: YutoriScout[];
@@ -52,6 +53,13 @@ export function DeactivatedScoutsBanner({
             >
               Add credits on Yutori →
             </a>
+          </p>
+          <p className="mt-1.5">
+            <AskAngelinaLink
+              appName="Daily Brew"
+              context={`${done.length} scout(s) deactivated by Yutori`}
+              error={done[0]?.rejection_reason || undefined}
+            />
           </p>
         </div>
       </div>
