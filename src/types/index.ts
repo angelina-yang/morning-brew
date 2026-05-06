@@ -81,4 +81,12 @@ export interface UserInfo {
   name: string;
   email: string;
   registeredAt: string;
+  /**
+   * True once we've confirmed this user's registration was POSTed to the
+   * webhook. Marked true immediately when register() runs (because the
+   * welcome modal awaits the POST). Older users (registered before
+   * 2026-05-05) won't have this field — we backfill them on next app
+   * load via use-user's effect.
+   */
+  serverSynced?: boolean;
 }

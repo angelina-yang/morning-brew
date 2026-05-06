@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email, newsletter } = await req.json();
+    const { name, email, newsletter, backfill } = await req.json();
 
     // Input validation
     if (!name || !email || !email.includes("@")) {
@@ -44,6 +44,11 @@ export async function POST(req: Request) {
             newsletter: newsletter ? "Yes" : "No",
             source: "morning-brew",
             timestamp: new Date().toISOString(),
+            // When true, Apps Script doPost should check the sheet for an
+            // existing (email, source) row and skip if found — this lets us
+            // safely re-fire registrations from old browsers that got
+            // dropped by the previous fire-and-forget bug.
+            backfill: Boolean(backfill),
           }),
           redirect: "manual",
           signal: AbortSignal.timeout(5000),
