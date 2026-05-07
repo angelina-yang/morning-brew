@@ -155,13 +155,16 @@ export function WelcomeModal({ isOpen, onComplete }: WelcomeModalProps) {
             >
               TwoSetAI Lab Terms of Use
             </a>
-            . This is a free, BYOK tool — I bring my own API keys and pay my own usage costs.
+            . This is a free, experimental tool.
           </span>
         </label>
 
         {/* Privacy note */}
         <p className="text-xs mb-5 leading-relaxed" style={{ color: "var(--text-faint)" }}>
-          Your API keys are stored safely in your browser. We never save, log, or share them with anyone.
+          <span className="font-medium" style={{ color: "var(--text-secondary)" }}>
+            Your keys, your data.
+          </span>
+          {" "}Scout settings and digests stay in your browser, never on our server.
         </p>
 
         {/* Submit */}

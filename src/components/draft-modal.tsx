@@ -285,6 +285,7 @@ export function DraftModal({
             disabled={loading}
             className="flex items-center gap-1.5 text-sm transition-colors disabled:opacity-40"
             style={{ color: "var(--text-muted)" }}
+            title="Charged directly to your Anthropic account. We do not see or control this charge."
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M1 4v6h6" />

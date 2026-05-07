@@ -15,6 +15,11 @@ export function SettingsModal({ isOpen, onClose, keys, onSave }: SettingsModalPr
   const [form, setForm] = useState<ApiKeys>(keys);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  // Required financial-responsibility consent. Pre-acknowledge if user is
+  // editing keys they already saved (they consented previously).
+  const [acknowledged, setAcknowledged] = useState(
+    keys.yutoriApiKey.trim() !== "" && keys.claudeApiKey.trim() !== ""
+  );
 
   if (!isOpen) return null;
 
@@ -79,6 +84,41 @@ export function SettingsModal({ isOpen, onClose, keys, onSave }: SettingsModalPr
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
+        </div>
+
+        {/* Spending-cap recommendation banner — shown above both inputs so
+            users see it before pasting either key. */}
+        <div
+          className="rounded-lg px-3 py-2.5 mb-4 text-xs leading-relaxed"
+          style={{
+            background: "rgba(234, 179, 8, 0.12)",
+            border: "1px solid rgba(234, 179, 8, 0.3)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          <strong style={{ color: "var(--text-primary)" }}>
+            Set hard spending caps first.
+          </strong>{" "}
+          Daily Brew does not enforce, monitor, or limit your provider charges.
+          Set monthly caps in your{" "}
+          <a
+            href="https://platform.yutori.com/settings"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--accent)" }}
+          >
+            Yutori
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://console.anthropic.com/settings/limits"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--accent)" }}
+          >
+            Anthropic
+          </a>{" "}
+          accounts before pasting your keys.
         </div>
 
         {/* Yutori API Key */}
@@ -161,10 +201,33 @@ export function SettingsModal({ isOpen, onClose, keys, onSave }: SettingsModalPr
         </div>
 
         {/* Privacy note */}
-        <p className="text-xs mb-4" style={{ color: "var(--text-faint)" }}>
-          Your API keys are stored safely in your browser. We never save, log,
-          or share them with anyone.
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: "var(--text-faint)" }}>
+          Your keys are saved on this device only, inside your browser.
+          Clearing your browser data or switching devices removes the saved
+          keys.
         </p>
+
+        {/* Required financial-responsibility consent — checkbox must be
+            ticked before Save activates. Click-time clickwrap. */}
+        <label
+          className="flex items-start gap-2.5 mb-4 cursor-pointer"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => setAcknowledged(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded shrink-0"
+            style={{ accentColor: "var(--accent)" }}
+          />
+          <span className="text-xs leading-relaxed">
+            I understand that I am solely responsible for all charges
+            incurred at my chosen API providers through Daily Brew, and that
+            TwoSetAI cannot see, pause, refund, or limit those charges. I
+            have set hard spending caps in my provider accounts, or I accept
+            full responsibility if I have not.
+          </span>
+        </label>
 
         {/* Error */}
         {saveError && (
@@ -176,7 +239,7 @@ export function SettingsModal({ isOpen, onClose, keys, onSave }: SettingsModalPr
         {/* Save button */}
         <button
           onClick={handleSave}
-          disabled={saving || !form.yutoriApiKey.trim() || !form.claudeApiKey.trim()}
+          disabled={saving || !acknowledged || !form.yutoriApiKey.trim() || !form.claudeApiKey.trim()}
           className="w-full py-2.5 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-40"
           style={{ background: "var(--accent)" }}
         >
